@@ -14,4 +14,10 @@ urlpatterns = [
     path('api/content/', include('content.urls')),
     path('api/sync/', include('sync_engine.urls')),
     path('ping/', lambda request: __import__('django.http', fromlist=['JsonResponse']).JsonResponse({'status': 'ok'})),
+    path('', lambda request: __import__('django.http', fromlist=['JsonResponse']).JsonResponse({
+        'status': 'ok',
+        'app': 'Little Learner API',
+        'version': '1.0.0',
+        'database': 'Supabase PostgreSQL'
+    })),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
