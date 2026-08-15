@@ -1,39 +1,26 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import db from '../../db/index.js'
 import { useChild } from '../../hooks/useChild.jsx'
-import { gameService, gameStateService } from '../../services/data.service.js'
-import api from '../../api/client.js'
-import { contentService } from '../../services/data.service.js'
+import { gameService } from '../../services/data.service.js'
+
 import MemoryCardsGame from '../../games/MemoryCardsGame.jsx'
 import AlphabetMatchGame from '../../games/AlphabetMatchGame.jsx'
 import NumberMatchGame from '../../games/NumberMatchGame.jsx'
-import ShapeSorterGame from '../../games/ShapeSorterGame.jsx'
 import CountingGame from '../../games/CountingGame.jsx'
+import ShapeMatchDragGame from '../../games/ShapeMatchDragGame.jsx'
+import AlphabetPhonicsSuiteGame from '../../games/AlphabetPhonicsSuiteGame.jsx'
+import PuzzleProblemSolvingGame from '../../games/PuzzleProblemSolvingGame.jsx'
 
 export default function GamesPage() {
-  const navigate = useNavigate()
   const { activeChild } = useChild()
-  const [games, setGames] = useState([])
   const [activeGame, setActiveGame] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [activeCategory, setActiveCategory] = useState('all')
 
-  useEffect(() => {
-    const load = async () => {
-      let local = await contentService.getAllGames()
-      if (!local.length) {
-        try {
-          const res = await api.get('/games/')
-          await contentService.seedGamesFromApi(res.data.results || res.data)
-          local = await contentService.getAllGames()
-        } catch { }
-      }
-      setGames(local)
-      setLoading(false)
-    }
-    load()
-  }, [])
+  const scoresList = useLiveQuery(
+    () => activeChild ? db.gameScores.where('childId').equals(activeChild.localId).toArray() : [],
+    [activeChild?.localId]
+  )
 
   const handleGameComplete = async (gameId, score, maxScore, level, timeTaken) => {
     if (activeChild) {
@@ -42,54 +29,192 @@ export default function GamesPage() {
     setActiveGame(null)
   }
 
+  const getHighScore = (gameId) => {
+    if (!scoresList || !scoresList.length) return null
+    const matching = scoresList.filter(s => s.gameId === gameId || s.gameType === gameId)
+    if (!matching.length) return null
+    return Math.max(...matching.map(s => s.score || 0))
+  }
+
   if (activeGame) {
     return (
       <GameRouter
         game={activeGame}
         childId={activeChild?.localId}
-        onComplete={(score, maxScore, level, timeTaken) => handleGameComplete(activeGame.localId, score, maxScore, level, timeTaken)}
+        onComplete={(score, maxScore, level, timeTaken) => handleGameComplete(activeGame.id || activeGame.gameType, score, maxScore, level, timeTaken)}
         onBack={() => setActiveGame(null)}
       />
     )
   }
 
+  const CATEGORIES = [
+    { id: 'all', label: '🌟 All Usable Games' },
+    { id: 'puzzles', label: '🧩 Puzzles & Logic' },
+    { id: 'letters', label: '🔤 Phonics & Letters' },
+    { id: 'shapes', label: '⭐ Shapes & Matching' },
+    { id: 'numbers', label: '🔢 Numbers & Math' },
+  ]
+
+  const filteredGames = activeCategory === 'all'
+    ? BUILTIN_GAMES
+    : BUILTIN_GAMES.filter(g => g.category === activeCategory)
+
+  const featuredGame = BUILTIN_GAMES.find(g => g.id === 'puzzle_suite') || BUILTIN_GAMES[0]
+
   return (
-    <div style={{ padding: 16 }}>
-      <h1 className="heading" style={{ marginBottom: 6 }}>🎮 Games</h1>
-      <p style={{ color: 'var(--text-secondary)', marginBottom: 20 }}>Play and learn at the same time!</p>
-      {loading ? (
-        <div style={{ display: 'flex', justifyContent: 'center' }}><div className="spinner" /></div>
-      ) : (
-        <div className="games-grid">
-          {BUILTIN_GAMES.map((game) => (
-            <button
-              key={game.id}
-              className="module-card"
-              style={{
-                background: `linear-gradient(135deg, ${game.color}44, ${game.color}22)`,
-                border: `2px solid ${game.color}55`, cursor: 'pointer', aspectRatio: 'auto',
-                padding: 24, minHeight: 160
-              }}
-              onClick={() => setActiveGame(game)}
-            >
-              <div style={{ fontSize: 48 }}>{game.emoji}</div>
-              <div className="module-title" style={{ fontSize: 15 }}>{game.title}</div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>{game.difficulty}</div>
+    <div style={{ padding: '16px 16px 32px' }}>
+      {/* Header */}
+      <div style={{ marginBottom: 20 }}>
+        <h1 className="heading display-text" style={{ fontSize: 32, marginBottom: 4 }}>
+          🎮 Game Zone
+        </h1>
+        <p style={{ color: 'var(--text-secondary)', fontSize: 15, fontWeight: 700 }}>
+          Play our fully functional, interactive learning games!
+        </p>
+      </div>
+
+      {/* Category Filter Pills */}
+      <div style={{
+        display: 'flex',
+        gap: 8,
+        overflowX: 'auto',
+        paddingBottom: 8,
+        marginBottom: 24,
+        scrollbarWidth: 'none'
+      }}>
+        {CATEGORIES.map(cat => (
+          <button
+            key={cat.id}
+            onClick={() => setActiveCategory(cat.id)}
+            style={{
+              padding: '10px 18px',
+              borderRadius: 'var(--radius-full)',
+              background: activeCategory === cat.id ? 'linear-gradient(135deg, #8B5CF6, #EC4899)' : '#FFFFFF',
+              color: activeCategory === cat.id ? '#FFFFFF' : 'var(--text-primary)',
+              border: `1.5px solid ${activeCategory === cat.id ? '#8B5CF6' : 'var(--color-border)'}`,
+              fontWeight: 800,
+              fontSize: 14,
+              whiteSpace: 'nowrap',
+              boxShadow: activeCategory === cat.id ? '0 6px 18px rgba(139, 92, 246, 0.3)' : 'var(--shadow-card)',
+              transition: 'all 0.2s ease',
+              flexShrink: 0
+            }}
+          >
+            {cat.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Featured Puzzle Module Hero */}
+      {(activeCategory === 'all' || activeCategory === 'puzzles') && featuredGame && (
+        <div style={{ marginBottom: 28 }}>
+          <div style={{
+            fontSize: 13, fontWeight: 800, color: '#8B5CF6',
+            textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8
+          }}>
+            ⭐ FEATURED PUZZLE MODULE
+          </div>
+          <div
+            onClick={() => setActiveGame(featuredGame)}
+            style={{
+              background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.12) 0%, rgba(236, 72, 153, 0.12) 100%)',
+              border: '2.5px solid #8B5CF6',
+              borderRadius: 'var(--radius-xl)',
+              padding: '24px 20px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 16,
+              cursor: 'pointer',
+              boxShadow: 'var(--shadow-card)',
+              transition: 'transform 0.25s ease, box-shadow 0.25s ease'
+            }}
+            className="module-card"
+          >
+            <div style={{ fontSize: 60, animation: 'float 3s ease-in-out infinite' }}>
+              {featuredGame.emoji}
+            </div>
+            <div style={{ flex: 1, textAlign: 'left' }}>
+              <span className="badge badge-purple" style={{ marginBottom: 6 }}>7 PUZZLE MODES</span>
+              <h3 className="heading display-text" style={{ fontSize: 24 }}>
+                {featuredGame.title}
+              </h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 4, fontWeight: 700 }}>
+                Jigsaw (4 to 12 pieces), Missing Piece, Shadow Match, Mazes & Size Sorting!
+              </p>
+            </div>
+            <button className="btn btn-primary" style={{ padding: '10px 20px', minHeight: 'auto' }}>
+              Play ▶
             </button>
-          ))}
+          </div>
         </div>
       )}
+
+      {/* Games Grid */}
+      <div className="games-grid" style={{ padding: 0 }}>
+        {filteredGames.map((game) => (
+          <div
+            key={game.id}
+            onClick={() => setActiveGame(game)}
+            style={{
+              background: '#FFFFFF',
+              border: `2px solid ${game.color}44`,
+              borderRadius: 'var(--radius-lg)',
+              padding: '20px 16px',
+              cursor: 'pointer',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              textAlign: 'center',
+              gap: 10,
+              boxShadow: 'var(--shadow-card)',
+              transition: 'all 0.25s ease',
+              position: 'relative',
+              overflow: 'hidden'
+            }}
+            className="module-card"
+          >
+            <div style={{
+              position: 'absolute', top: 12, right: 12,
+              fontSize: 11, fontWeight: 800, padding: '3px 8px',
+              borderRadius: 99, background: `${game.color}15`, color: game.color
+            }}>
+              {game.difficulty}
+            </div>
+
+            <div style={{ fontSize: 48, filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.1))' }}>
+              {game.emoji}
+            </div>
+
+            <div className="module-title" style={{ fontSize: 16, color: 'var(--text-primary)' }}>
+              {game.title}
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+              {getHighScore(game.id) !== null ? (
+                <span className="badge badge-success" style={{ fontSize: 11 }}>
+                  🏆 Best: {getHighScore(game.id)} pts
+                </span>
+              ) : (
+                <span className="badge badge-info" style={{ fontSize: 11 }}>
+                  🌟 Play Now
+                </span>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
 
 function GameRouter({ game, childId, onComplete, onBack }) {
   const componentMap = {
-    memory_cards: MemoryCardsGame,
-    alphabet_match: AlphabetMatchGame,
+    puzzle_suite: PuzzleProblemSolvingGame,
+    shape_drag_match: ShapeMatchDragGame,
+    alphabet_phonics: AlphabetPhonicsSuiteGame,
     number_match: NumberMatchGame,
-    shape_sorter: ShapeSorterGame,
     counting: CountingGame,
+    memory_cards: MemoryCardsGame,
   }
   const Component = componentMap[game.id] || componentMap[game.gameType]
   if (!Component) return (
@@ -102,9 +227,10 @@ function GameRouter({ game, childId, onComplete, onBack }) {
 }
 
 export const BUILTIN_GAMES = [
-  { id: 'alphabet_match', gameType: 'alphabet_match', title: 'Alphabet Match', emoji: '🔤', color: '#FF6B6B', difficulty: 'Easy – Hard' },
-  { id: 'number_match', gameType: 'number_match', title: 'Number Match', emoji: '🔢', color: '#4ECDC4', difficulty: 'Easy – Hard' },
-  { id: 'memory_cards', gameType: 'memory_cards', title: 'Memory Cards', emoji: '🃏', color: '#A29BFE', difficulty: 'Easy – Hard' },
-  { id: 'shape_sorter', gameType: 'shape_sorter', title: 'Shape Sorter', emoji: '🔷', color: '#FD79A8', difficulty: 'Easy – Hard' },
-  { id: 'counting', gameType: 'counting', title: 'Counting Game', emoji: '🌟', color: '#FFE66D', difficulty: 'Easy – Hard' },
+  { id: 'puzzle_suite', gameType: 'puzzle_suite', category: 'puzzles', title: 'Puzzle & Problem Solving', emoji: '🧩', color: '#8B5CF6', difficulty: '7 Modes' },
+  { id: 'shape_drag_match', gameType: 'shape_drag_match', category: 'shapes', title: 'Shape Drop Match', emoji: '⭐', color: '#F97316', difficulty: '10 Stages' },
+  { id: 'alphabet_phonics', gameType: 'alphabet_phonics', category: 'letters', title: 'Alphabet & Phonics', emoji: '🔤', color: '#EC4899', difficulty: '5 Modes' },
+  { id: 'number_match', gameType: 'number_match', category: 'numbers', title: 'Number Match', emoji: '🔢', color: '#EC4899', difficulty: '3 Levels' },
+  { id: 'counting', gameType: 'counting', category: 'numbers', title: 'Counting Game', emoji: '🌟', color: '#10B981', difficulty: '3 Levels' },
+  { id: 'memory_cards', gameType: 'memory_cards', category: 'letters', title: 'Memory Cards', emoji: '🃏', color: '#3B82F6', difficulty: '3 Levels' },
 ]

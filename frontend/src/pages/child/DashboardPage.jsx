@@ -3,13 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import db from '../../db/index.js'
 import { useChild } from '../../hooks/useChild.jsx'
-import { useAuth } from '../../hooks/useAuth.jsx'
 import api from '../../api/client.js'
 import { contentService } from '../../services/data.service.js'
 
 export default function DashboardPage() {
   const { activeChild } = useChild()
-  const { user } = useAuth()
   const navigate = useNavigate()
   const [modules, setModules] = useState([])
   const [loadingModules, setLoadingModules] = useState(true)
@@ -29,20 +27,17 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const loadModules = async () => {
-      // Try local first
       const local = await contentService.getModules()
       if (local.length > 0) {
         setModules(local)
         setLoadingModules(false)
       }
-      // Then try network
       try {
         const res = await api.get('/modules/')
         await contentService.seedModulesFromApi(res.data.results || res.data)
         const updated = await contentService.getModules()
         setModules(updated)
       } catch {
-        // Offline - use what we have
       } finally {
         setLoadingModules(false)
       }
@@ -55,128 +50,137 @@ export default function DashboardPage() {
     [activeChild?.localId]
   )
 
-  const completedModules = (allProgress || []).filter(p => p.percentComplete >= 100).length
-  const avgProgress = allProgress?.length
-    ? Math.round(allProgress.reduce((s, p) => s + p.percentComplete, 0) / allProgress.length)
-    : 0
+  const ANIMALS_WORLD = [
+    { name: 'Lion', emoji: '🦁', desc: 'Roar! King of Jungle', color: '#F97316', bg: 'rgba(249,115,22,0.12)' },
+    { name: 'Elephant', emoji: '🐘', desc: 'Big & Friendly', color: '#EC4899', bg: 'rgba(236,72,153,0.12)' },
+    { name: 'Puppy', emoji: '🐶', desc: 'Playful Companion', color: '#8B5CF6', bg: 'rgba(139,92,246,0.12)' },
+    { name: 'Bear', emoji: '🐻', desc: 'Warm & Cuddly', color: '#10B981', bg: 'rgba(16,185,129,0.12)' },
+    { name: 'Fox', emoji: '🦊', desc: 'Smart & Quick', color: '#F59E0B', bg: 'rgba(245,158,11,0.12)' },
+    { name: 'Owl', emoji: '🦉', desc: 'Night Explorer', color: '#3B82F6', bg: 'rgba(59,130,246,0.12)' },
+  ]
 
-  if (!activeChild) {
-    return (
-      <div style={{ padding: 24, textAlign: 'center' }}>
-        <div style={{ fontSize: 64, marginBottom: 16 }}>👋</div>
-        <h2 className="heading">Hi there!</h2>
-        <p style={{ color: 'var(--text-secondary)', marginTop: 8, marginBottom: 24 }}>
-          Select a child profile to start learning
-        </p>
-        <button className="btn btn-primary" onClick={() => navigate('/select-child')}>
-          Choose Profile
-        </button>
-      </div>
-    )
-  }
+  const SHAPES_MAGIC = [
+    { name: 'Star', emoji: '⭐', color: '#F59E0B' },
+    { name: 'Circle', emoji: '⭕', color: '#F97316' },
+    { name: 'Triangle', emoji: '🔺', color: '#EF4444' },
+    { name: 'Square', emoji: '🟦', color: '#3B82F6' },
+    { name: 'Heart', emoji: '❤️', color: '#EC4899' },
+    { name: 'Diamond', emoji: '💎', color: '#8B5CF6' },
+  ]
+
+  const NUMBER_BUBBLES = [
+    { num: '1', emoji: '🍎', label: 'One Apple' },
+    { num: '2', emoji: '⚽', label: 'Two Balls' },
+    { num: '3', emoji: '⭐', label: 'Three Stars' },
+    { num: '4', emoji: '🌸', label: 'Four Flowers' },
+    { num: '5', emoji: '🎈', label: 'Five Balloons' },
+  ]
 
   return (
     <div style={{ padding: '0 16px' }}>
-      {/* Hero greeting */}
+      {/* 🌈 Hero Banner with 3D Image & Animations */}
       <div style={{
-        background: 'linear-gradient(135deg, #6C63FF22, #FF6B6B22)',
-        border: '1px solid rgba(108,99,255,0.2)',
+        position: 'relative',
         borderRadius: 'var(--radius-xl)',
-        padding: '24px 20px',
-        marginBottom: 24,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 16,
-        animation: 'slideUp 0.4s ease'
+        overflow: 'hidden',
+        boxShadow: 'var(--shadow-float)',
+        marginBottom: 28,
+        border: '2px solid rgba(249, 115, 22, 0.2)',
+        background: '#FFFFFF'
       }}>
-        <div className="avatar-circle" style={{ width: 64, height: 64, fontSize: 36 }}>
-          {avatarEmoji(activeChild.avatar)}
-        </div>
-        <div>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 14, fontWeight: 700 }}>Hello!</p>
-          <h1 className="heading display-text" style={{ fontSize: 28 }}>{activeChild.name} 🌟</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 4 }}>
-            {totalLessons || 0} lessons completed!
+        <img
+          src="/hero_banner.jpg"
+          alt="Little Learner Fun Animals Numbers Shapes"
+          style={{ width: '100%', height: 'auto', maxHeight: 320, objectFit: 'cover', display: 'block' }}
+        />
+        <div style={{
+          padding: '20px 24px',
+          background: 'linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,247,237,0.98) 100%)',
+          marginTop: -40,
+          position: 'relative',
+          textAlign: 'center'
+        }}>
+          <h1 className="heading display-text" style={{
+            fontSize: 'clamp(28px, 6vw, 42px)',
+            background: 'linear-gradient(135deg, #F97316 0%, #EC4899 50%, #8B5CF6 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent'
+          }}>
+            Welcome Little Learner! 🌈✨
+          </h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 16, fontWeight: 800, marginTop: 6, marginBottom: 18 }}>
+            Explore Animals, Shapes, Numbers & Fun Games!
           </p>
+
+          <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button className="btn btn-primary btn-child" onClick={() => navigate('/child/learn')}>
+              📚 Start Learning
+            </button>
+            <button className="btn btn-purple btn-child" onClick={() => navigate('/child/games')}>
+              🎮 Play Games
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Quick stats */}
-      <div className="stats-grid" style={{ marginBottom: 24 }}>
-        {[
-          { icon: '📚', value: totalLessons || 0, label: 'Lessons Done' },
-          { icon: '⭐', value: badges?.length || 0, label: 'Badges Earned' },
-          { icon: '🎮', value: recentScores?.length || 0, label: 'Games Played' },
-          { icon: '📈', value: `${avgProgress}%`, label: 'Avg Progress' },
-        ].map((s) => (
-          <div key={s.label} className="stat-card">
-            <div style={{ fontSize: 28, marginBottom: 6 }}>{s.icon}</div>
-            <div className="stat-value" style={{ color: 'var(--color-primary)', fontSize: 24 }}>{s.value}</div>
-            <div className="stat-label">{s.label}</div>
-          </div>
-        ))}
-      </div>
 
-      {/* Badges */}
-      {badges?.length > 0 && (
-        <div style={{ marginBottom: 24 }}>
-          <h2 className="subheading" style={{ marginBottom: 12 }}>🏆 Your Badges</h2>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            {badges.map((b) => (
-              <div key={b.badgeType} style={{ fontSize: 32 }} title={b.badgeType.replace(/_/g,' ')}>
-                {BADGE_EMOJIS[b.badgeType] || '🏅'}
+
+      {/* 🔢 Magic Numbers & Counting Section */}
+      <div style={{ marginBottom: 32 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+          <h2 className="subheading" style={{ fontSize: 24, display: 'flex', alignItems: 'center', gap: 8 }}>
+            🔢 Magic Numbers & Counting
+          </h2>
+          <button
+            onClick={() => navigate('/child/games')}
+            style={{ color: '#EC4899', fontWeight: 800, fontSize: 14, background: 'none', cursor: 'pointer' }}
+          >
+            Play Games →
+          </button>
+        </div>
+
+        <div style={{
+          display: 'flex',
+          gap: 12,
+          overflowX: 'auto',
+          paddingBottom: 8,
+          scrollbarWidth: 'none'
+        }}>
+          {NUMBER_BUBBLES.map((n) => (
+            <div
+              key={n.num}
+              onClick={() => navigate('/child/games')}
+              style={{
+                minWidth: 110,
+                padding: '16px 14px',
+                background: '#FFFFFF',
+                border: '2px solid rgba(236, 72, 153, 0.25)',
+                borderRadius: 'var(--radius-lg)',
+                textAlign: 'center',
+                cursor: 'pointer',
+                boxShadow: 'var(--shadow-card)',
+                flexShrink: 0
+              }}
+              className="module-card"
+            >
+              <div style={{
+                fontFamily: 'Baloo 2', fontSize: 38, fontWeight: 900,
+                color: '#EC4899', lineHeight: 1
+              }}>
+                {n.num}
               </div>
-            ))}
-          </div>
+              <div style={{ fontSize: 28, margin: '6px 0' }}>{n.emoji}</div>
+              <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-secondary)' }}>
+                {n.label}
+              </div>
+            </div>
+          ))}
         </div>
-      )}
-
-      {/* Continue learning */}
-      <div style={{ marginBottom: 24 }}>
-        <h2 className="subheading" style={{ marginBottom: 12 }}>📖 Continue Learning</h2>
-        {loadingModules ? (
-          <div style={{ display: 'flex', gap: 12 }}>
-            {[1,2,3].map(i => <div key={i} className="skeleton" style={{ width: 120, height: 120 }} />)}
-          </div>
-        ) : (
-          <div className="modules-grid" style={{ padding: 0 }}>
-            {modules.slice(0, 6).map((m) => {
-              const prog = (allProgress || []).find(p => p.moduleId === m.serverId)
-              const pct = prog?.percentComplete || 0
-              return (
-                <div
-                  key={m.localId}
-                  className="module-card"
-                  style={{ background: `linear-gradient(135deg, ${m.colorHex}33, ${m.colorHex}11)`, border: `1px solid ${m.colorHex}44` }}
-                  onClick={() => navigate(`/child/learn/${m.slug}`)}
-                  role="button"
-                  tabIndex={0}
-                >
-                  <div className="module-emoji">{m.iconEmoji}</div>
-                  <div className="module-title">{m.title}</div>
-                  {pct > 0 && (
-                    <div className="progress-bar" style={{ width: '90%' }}>
-                      <div className="progress-fill" style={{ width: `${pct}%`, background: m.colorHex }} />
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        )}
       </div>
+
+
+
+
     </div>
   )
-}
-
-function avatarEmoji(avatar) {
-  const map = { bear:'🐻', cat:'🐱', dog:'🐶', elephant:'🐘', fox:'🦊', lion:'🦁', owl:'🦉', penguin:'🐧' }
-  return map[avatar] || '🐻'
-}
-
-const BADGE_EMOJIS = {
-  first_lesson: '🌟', lesson_streak_3: '🔥', lesson_streak_7: '🏆',
-  perfect_quiz: '🎯', game_master: '🎮', alphabet_complete: '🔤',
-  numbers_complete: '🔢', colors_complete: '🎨', shapes_complete: '⭐',
-  animals_complete: '🐾', all_modules: '🚀',
 }

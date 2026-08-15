@@ -9,13 +9,5 @@ const STATUS_CONFIG = {
 }
 
 export default function ConnectivityBar() {
-  const { status } = useConnectivity()
-  const cfg = STATUS_CONFIG[status] || STATUS_CONFIG[CONNECTIVITY_STATUS.OFFLINE]
-
-  return (
-    <div className={`status-bar ${cfg.cls}`} role="status" aria-live="polite">
-      <span className="status-dot" />
-      <span>{cfg.label}</span>
-    </div>
-  )
+  return null
 }

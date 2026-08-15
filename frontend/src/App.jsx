@@ -32,8 +32,7 @@ function PrivateRoute({ children }) {
 
 function ChildLayout({ children }) {
   return (
-    <div className="app-layout has-status-bar">
-      <ConnectivityBar />
+    <div className="app-layout">
       <main className="page-content">
         <Suspense fallback={<PageLoader />}>{children}</Suspense>
       </main>
@@ -61,10 +60,8 @@ function AppRoot() {
       <Route path="/login" element={<Suspense fallback={<PageLoader />}><LoginPage /></Suspense>} />
       <Route path="/register" element={<Suspense fallback={<PageLoader />}><RegisterPage /></Suspense>} />
 
-      {/* Child selector (requires login) */}
-      <Route path="/select-child" element={
-        <PrivateRoute><Suspense fallback={<PageLoader />}><SelectChildPage /></Suspense></PrivateRoute>
-      } />
+      {/* Redirect select-child to home directly */}
+      <Route path="/select-child" element={<Navigate to="/child/home" replace />} />
 
       {/* Child learning routes */}
       <Route path="/child/home" element={<PrivateRoute><ChildLayout><DashboardPage /></ChildLayout></PrivateRoute>} />
@@ -76,9 +73,9 @@ function AppRoot() {
       {/* Parent dashboard */}
       <Route path="/parent/dashboard" element={<PrivateRoute><Suspense fallback={<PageLoader />}><ParentDashboard /></Suspense></PrivateRoute>} />
 
-      {/* Default redirect */}
-      <Route path="/" element={<Navigate to="/select-child" replace />} />
-      <Route path="*" element={<Navigate to="/select-child" replace />} />
+      {/* Default redirect to home */}
+      <Route path="/" element={<Navigate to="/child/home" replace />} />
+      <Route path="*" element={<Navigate to="/child/home" replace />} />
     </Routes>
   )
 }

@@ -22,12 +22,31 @@ export default function RegisterPage() {
   }
 
   return (
-    <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div className="glass-card" style={{ width: '100%', maxWidth: 420, padding: 32 }}>
-        <button className="btn btn-secondary" style={{ padding: '6px 14px', minHeight: 'auto', marginBottom: 20 }} onClick={() => navigate('/login')}>← Back</button>
-        <h2 style={{ marginBottom: 24, fontWeight: 800 }}>Create Account</h2>
-        {error && <div style={{ background: 'rgba(255,107,107,0.1)', border: '1px solid rgba(255,107,107,0.3)', borderRadius: 'var(--radius-md)', padding: '12px 16px', marginBottom: 20, color: '#FF6B6B', fontSize: 14 }}>{error}</div>}
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <div style={{
+      minHeight: '100dvh', display: 'flex', alignItems: 'center',
+      justifyContent: 'center', padding: 24, background: 'var(--color-bg)'
+    }}>
+      <div className="card" style={{
+        width: '100%', maxWidth: 440, padding: 32,
+        background: '#FFFFFF', border: '1.5px solid var(--color-border)',
+        boxShadow: 'var(--shadow-card)', borderRadius: 'var(--radius-xl)'
+      }}>
+        <button className="btn btn-secondary" style={{ padding: '6px 16px', minHeight: 'auto', marginBottom: 20, fontSize: 14 }} onClick={() => navigate('/login')}>
+          ← Back
+        </button>
+        <h2 className="heading display-text" style={{ marginBottom: 24, fontSize: 28, color: 'var(--text-primary)' }}>
+          Create Account
+        </h2>
+        {error && (
+          <div style={{
+            background: 'rgba(239,68,68,0.1)', border: '1.5px solid rgba(239,68,68,0.3)',
+            borderRadius: 'var(--radius-md)', padding: '12px 16px', marginBottom: 20,
+            color: '#DC2626', fontSize: 14, fontWeight: 700
+          }}>
+            {error}
+          </div>
+        )}
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {[
             { id: 'reg-name', label: 'Full Name', key: 'name', type: 'text', placeholder: 'Jane Smith' },
             { id: 'reg-email', label: 'Email', key: 'email', type: 'email', placeholder: 'jane@example.com' },
@@ -41,7 +60,7 @@ export default function RegisterPage() {
             </div>
           ))}
           <button id="reg-submit" type="submit" className="btn btn-primary" disabled={loading} style={{ marginTop: 8 }}>
-            {loading ? <span className="spinner" style={{ width: 24, height: 24, borderWidth: 2 }} /> : '✨ Create Account'}
+            {loading ? <span className="spinner" style={{ width: 24, height: 24, borderWidth: 3 }} /> : '✨ Create Account'}
           </button>
         </form>
       </div>

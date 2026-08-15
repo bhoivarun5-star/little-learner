@@ -11,125 +11,185 @@ const SHAPE_EMOJI = {
   circle: '⭕', square: '⬛', triangle: '🔺', rectangle: '🟦',
   star: '⭐', heart: '❤️', diamond: '💎', oval: '🥚'
 }
+
 const SHAPE_COLORS = {
-  circle: '#FF6B6B', square: '#4ECDC4', triangle: '#FFE66D', rectangle: '#A29BFE',
-  star: '#FD79A8', heart: '#FF9F43', diamond: '#6C63FF', oval: '#55EFC4'
+  circle: '#F97316', square: '#EC4899', triangle: '#8B5CF6', rectangle: '#3B82F6',
+  star: '#F59E0B', heart: '#EF4444', diamond: '#10B981', oval: '#D97706'
 }
 
 function shuffleArr(arr) {
   return [...arr].sort(() => Math.random() - 0.5)
 }
 
-const INITIAL_STATE = (level = 0) => {
-  const shapes = SHAPES_BY_LEVEL[level]
+const INITIAL_STATE = (level = 0, currentScore = 0) => {
+  const shapes = SHAPES_BY_LEVEL[level] || SHAPES_BY_LEVEL[0]
   const shuffled = shuffleArr(shapes)
-  return { level, shapes, tray: shuffled, slots: shapes.map(() => null), score: 0, dragging: null, complete: false, startTime: Date.now() }
+  return {
+    level,
+    shapes,
+    tray: shuffled,
+    slots: shapes.map(() => null),
+    score: currentScore,
+    dragging: null,
+    startTime: Date.now(),
+    levelComplete: false,
+    gameComplete: false
+  }
 }
 
 export default function ShapeSorterGame({ game, childId, onComplete, onBack }) {
   const { state, saveState, restored, clearState } = useGameStatePersistence('shape_sorter', childId, INITIAL_STATE(0))
-  const [dragOver, setDragOver] = useState(null)
+  const [wrongFlash, setWrongFlash] = useState(false)
 
   if (!restored) return <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><div className="spinner" /></div>
 
-  const handleTap = (shape, fromTray) => {
-    // On mobile: tap shape then tap slot
+  const handleTap = (targetShape, fromTray) => {
+    if (state.levelComplete || state.gameComplete) return
+
     if (!state.dragging) {
-      if (fromTray) saveState({ ...state, dragging: shape })
+      if (fromTray) saveState({ ...state, dragging: targetShape })
     } else {
       if (!fromTray) {
-        // slot tap - try to place
-        const slotIdx = state.shapes.indexOf(shape)
+        // Tapped a target slot
+        const slotIdx = state.shapes.indexOf(targetShape)
         const correct = state.shapes[slotIdx] === state.dragging
+
         if (correct) {
           const newSlots = [...state.slots]
           newSlots[slotIdx] = state.dragging
           const newTray = state.tray.filter(s => s !== state.dragging)
           const newScore = state.score + 25
-          const complete = newSlots.every(Boolean)
-          const ns = { ...state, slots: newSlots, tray: newTray, score: newScore, dragging: null, complete }
-          saveState(ns)
-          if (complete) {
-            const timeTaken = Math.round((Date.now() - state.startTime) / 1000)
+          const isLevelDone = newSlots.every(Boolean)
+
+          if (isLevelDone) {
             if (state.level < SHAPES_BY_LEVEL.length - 1) {
-              setTimeout(() => saveState(INITIAL_STATE(state.level + 1)), 1500)
+              saveState({ ...state, slots: newSlots, tray: newTray, score: newScore, dragging: null, levelComplete: true })
             } else {
-              onComplete(newScore, state.shapes.length * 25, state.level + 1, timeTaken)
-              clearState()
+              saveState({ ...state, slots: newSlots, tray: newTray, score: newScore, dragging: null, gameComplete: true })
             }
+          } else {
+            saveState({ ...state, slots: newSlots, tray: newTray, score: newScore, dragging: null })
           }
         } else {
-          saveState({ ...state, dragging: null }) // wrong slot
+          // Wrong slot tap
+          setWrongFlash(true)
+          setTimeout(() => setWrongFlash(false), 500)
+          saveState({ ...state, dragging: null })
         }
       } else {
-        saveState({ ...state, dragging: shape }) // select different
+        // Select different shape from tray
+        saveState({ ...state, dragging: targetShape })
       }
     }
   }
 
+  const handleNextLevel = () => {
+    saveState(INITIAL_STATE(state.level + 1, state.score))
+  }
+
+  const handleFinish = () => {
+    const timeTaken = Math.round((Date.now() - (state.startTime || Date.now())) / 1000)
+    onComplete(state.score, 400, state.level + 1, timeTaken)
+    clearState()
+  }
+
   return (
     <div className="game-container">
+      {/* Header */}
       <div className="game-header">
         <button className="btn btn-secondary" style={{ padding: '8px 16px', minHeight: 'auto' }} onClick={onBack}>← Back</button>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 700 }}>LEVEL {state.level + 1}</div>
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 800 }}>LEVEL {state.level + 1}</div>
           <div className="game-score-display">{state.score}</div>
         </div>
         <div style={{ width: 60 }} />
       </div>
 
-      <p style={{ color: 'var(--text-secondary)', fontWeight: 700, fontSize: 16 }}>
-        {state.dragging ? `Place the ${state.dragging}!` : 'Tap a shape to pick it up!'}
-      </p>
+      {!state.levelComplete && !state.gameComplete && (
+        <>
+          <p style={{ color: 'var(--text-primary)', fontWeight: 800, fontSize: 18, textAlign: 'center' }}>
+            {state.dragging ? `Now tap the matching slot for ${state.dragging.toUpperCase()}!` : 'Tap a shape below to pick it up!'}
+          </p>
 
-      {/* Target slots */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center', maxWidth: 360 }}>
-        {state.shapes.map((shape, i) => (
-          <button
-            key={shape}
-            onClick={() => !state.slots[i] && handleTap(shape, false)}
-            style={{
-              width: 80, height: 80,
-              borderRadius: 'var(--radius-lg)',
-              border: `3px dashed ${state.slots[i] ? SHAPE_COLORS[shape] : dragOver === shape ? 'var(--color-primary)' : 'rgba(255,255,255,0.2)'}`,
-              background: state.slots[i] ? `${SHAPE_COLORS[shape]}33` : 'rgba(255,255,255,0.03)',
-              fontSize: 36, cursor: state.slots[i] ? 'default' : 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              transition: 'all 0.2s'
-            }}
-          >
-            {state.slots[i] ? SHAPE_EMOJI[shape] : <span style={{ fontSize: 20, color: 'rgba(255,255,255,0.2)', fontWeight: 700 }}>?</span>}
-          </button>
-        ))}
-      </div>
+          {/* Target slots */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, justifyContent: 'center', maxWidth: 380 }}>
+            {state.shapes.map((shape, i) => {
+              const isFilled = Boolean(state.slots[i])
+              return (
+                <button
+                  key={shape}
+                  onClick={() => !isFilled && handleTap(shape, false)}
+                  style={{
+                    width: 84, height: 84,
+                    borderRadius: 'var(--radius-lg)',
+                    border: `3px dashed ${isFilled ? SHAPE_COLORS[shape] : wrongFlash ? '#EF4444' : 'rgba(249,115,22,0.3)'}`,
+                    background: isFilled ? `${SHAPE_COLORS[shape]}22` : '#FFFFFF',
+                    fontSize: 40, cursor: isFilled ? 'default' : 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    boxShadow: 'var(--shadow-card)',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  {isFilled ? SHAPE_EMOJI[shape] : <span style={{ fontSize: 18, color: 'var(--text-muted)', fontWeight: 800 }}>?</span>}
+                </button>
+              )
+            })}
+          </div>
 
-      {/* Tray of shapes to place */}
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
-        {state.tray.map((shape) => (
-          <button
-            key={shape}
-            onClick={() => handleTap(shape, true)}
-            style={{
-              width: 72, height: 72,
-              borderRadius: 'var(--radius-md)',
-              background: state.dragging === shape ? `${SHAPE_COLORS[shape]}55` : 'var(--color-card)',
-              border: `2px solid ${state.dragging === shape ? SHAPE_COLORS[shape] : 'var(--color-border)'}`,
-              fontSize: 36, cursor: 'pointer',
-              transform: state.dragging === shape ? 'scale(1.15)' : 'scale(1)',
-              transition: 'all 0.2s',
-              display: 'flex', alignItems: 'center', justifyContent: 'center'
-            }}
-          >
-            {SHAPE_EMOJI[shape]}
-          </button>
-        ))}
-      </div>
+          {/* Tray of shapes to place */}
+          <div style={{
+            display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center',
+            padding: '16px', background: '#FFFFFF', borderRadius: 'var(--radius-xl)',
+            border: '1.5px solid var(--color-border)', boxShadow: 'var(--shadow-card)',
+            marginTop: 10
+          }}>
+            {state.tray.map((shape) => {
+              const isSelected = state.dragging === shape
+              return (
+                <button
+                  key={shape}
+                  onClick={() => handleTap(shape, true)}
+                  style={{
+                    width: 76, height: 76,
+                    borderRadius: 'var(--radius-md)',
+                    background: isSelected ? 'linear-gradient(135deg, #F97316, #EC4899)' : 'rgba(249,115,22,0.06)',
+                    border: `2.5px solid ${isSelected ? '#F97316' : 'var(--color-border)'}`,
+                    fontSize: 40, cursor: 'pointer',
+                    transform: isSelected ? 'scale(1.15) translateY(-4px)' : 'scale(1)',
+                    boxShadow: isSelected ? '0 8px 20px rgba(249,115,22,0.3)' : 'none',
+                    transition: 'all 0.2s ease',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                  }}
+                >
+                  {SHAPE_EMOJI[shape]}
+                </button>
+              )
+            })}
+          </div>
+        </>
+      )}
 
-      {state.complete && (
+      {/* Level Complete Modal */}
+      {state.levelComplete && (
         <div className="celebration-overlay">
           <div className="star-burst">🌟</div>
-          <h2 className="heading display-text">Level {state.level + 1} Complete!</h2>
-          <p style={{ color: 'var(--color-accent)', fontSize: 20, fontWeight: 800 }}>Score: {state.score}</p>
+          <h2 className="heading display-text" style={{ fontSize: 36 }}>Level {state.level + 1} Sorted!</h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 20, fontWeight: 800 }}>Score: {state.score}</p>
+          <button className="btn btn-primary btn-child" style={{ marginTop: 16 }} onClick={handleNextLevel}>
+            Next Level →
+          </button>
+        </div>
+      )}
+
+      {/* Game Complete Victory Modal */}
+      {state.gameComplete && (
+        <div className="celebration-overlay">
+          <div className="star-burst">🎉</div>
+          <h2 className="heading display-text" style={{ fontSize: 38 }}>Shape Genius!</h2>
+          <p style={{ color: '#F97316', fontSize: 24, fontWeight: 900 }}>Total Score: {state.score}</p>
+          <button className="btn btn-success btn-child" style={{ marginTop: 16 }} onClick={handleFinish}>
+            Claim Victory 🏆
+          </button>
         </div>
       )}
     </div>

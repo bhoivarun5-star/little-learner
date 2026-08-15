@@ -60,9 +60,6 @@ export default function LearnPage() {
           >
             <div className="module-emoji">{m.iconEmoji}</div>
             <div className="module-title">{m.title}</div>
-            {m.downloadStatus === 'downloaded' && (
-              <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 700 }}>✓ Offline</span>
-            )}
           </button>
         ))}
       </div>

@@ -61,8 +61,8 @@ export default function ParentDashboard() {
           <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>{user?.name} · {user?.email}</p>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
-          <button className="btn btn-secondary" style={{ padding: '8px 16px', minHeight: 'auto', fontSize: 14 }} onClick={() => navigate('/select-child')}>
-            👶 Switch Child
+          <button className="btn btn-secondary" style={{ padding: '8px 16px', minHeight: 'auto', fontSize: 14 }} onClick={() => navigate('/child/home')}>
+            🏠 Go to Home
           </button>
           <button className="btn btn-secondary" style={{ padding: '8px 16px', minHeight: 'auto', fontSize: 14 }} onClick={logout}>
             Sign Out

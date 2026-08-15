@@ -8,14 +8,35 @@ export function ChildProvider({ children }) {
   const [loadingChild, setLoadingChild] = useState(true)
 
   useEffect(() => {
-    // Restore active child from settings
-    db.settings.get('activeChildId').then(async (row) => {
+    const initChild = async () => {
+      let child = null
+      const row = await db.settings.get('activeChildId')
       if (row?.value) {
-        const child = await db.childProfiles.get(row.value)
-        if (child) setActiveChild(child)
+        child = await db.childProfiles.get(row.value)
       }
+      if (!child) {
+        const all = await db.childProfiles.toArray()
+        if (all.length > 0) {
+          child = all[0]
+        } else {
+          // Auto create default learner profile
+          const defaultProfile = {
+            localId: 'default_learner',
+            serverId: null,
+            name: 'Little Learner',
+            avatar: 'bear',
+            pin: '',
+            updatedAt: new Date().toISOString()
+          }
+          await db.childProfiles.put(defaultProfile)
+          child = defaultProfile
+        }
+        await db.settings.put({ key: 'activeChildId', value: child.localId, updatedAt: new Date().toISOString() })
+      }
+      setActiveChild(child)
       setLoadingChild(false)
-    })
+    }
+    initChild()
   }, [])
 
   const selectChild = async (child) => {

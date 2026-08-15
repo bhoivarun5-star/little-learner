@@ -17,14 +17,17 @@ export function useGameStatePersistence(gameId, childId, initialState) {
   }, [gameId, childId])
 
   // Save state function
-  const saveState = useCallback((newState) => {
-    setState(newState)
-    if (childId && gameId) {
-      clearTimeout(saveTimer.current)
-      saveTimer.current = setTimeout(() => {
-        gameStateService.save(gameId, childId, newState)
-      }, 500)
-    }
+  const saveState = useCallback((updater) => {
+    setState((prevState) => {
+      const newState = typeof updater === 'function' ? updater(prevState) : updater
+      if (childId && gameId) {
+        clearTimeout(saveTimer.current)
+        saveTimer.current = setTimeout(() => {
+          gameStateService.save(gameId, childId, newState)
+        }, 500)
+      }
+      return newState
+    })
   }, [gameId, childId])
 
   // Save on visibility change (tab switch / minimize)
