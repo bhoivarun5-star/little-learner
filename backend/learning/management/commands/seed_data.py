@@ -30,34 +30,39 @@ MODULES = [
         'icon_emoji': '⭐', 'color_hex': '#A29BFE', 'size_bytes': 8_000_000, 'order': 4,
     },
     {
+        'slug': 'general-awareness', 'title': 'General Awareness', 'module_type': 'general_awareness',
+        'description': 'Explore Animals, Birds, Plants, Food, Vehicles, Weather, Seasons, Helpers & more!',
+        'icon_emoji': '🌎', 'color_hex': '#00CEC9', 'size_bytes': 16_000_000, 'order': 5,
+    },
+    {
         'slug': 'animals', 'title': 'Animals', 'module_type': 'animals',
         'description': 'Meet amazing animals and hear their sounds!',
-        'icon_emoji': '🐾', 'color_hex': '#55EFC4', 'size_bytes': 25_000_000, 'order': 5,
+        'icon_emoji': '🐾', 'color_hex': '#55EFC4', 'size_bytes': 25_000_000, 'order': 6,
     },
     {
         'slug': 'fruits', 'title': 'Fruits & Vegetables', 'module_type': 'fruits',
         'description': 'Learn about yummy fruits and vegetables!',
-        'icon_emoji': '🍎', 'color_hex': '#FD79A8', 'size_bytes': 18_000_000, 'order': 6,
+        'icon_emoji': '🍎', 'color_hex': '#FD79A8', 'size_bytes': 18_000_000, 'order': 7,
     },
     {
         'slug': 'words', 'title': 'Basic Words', 'module_type': 'words',
         'description': 'Learn simple everyday words!',
-        'icon_emoji': '💬', 'color_hex': '#FDCB6E', 'size_bytes': 10_000_000, 'order': 7,
+        'icon_emoji': '💬', 'color_hex': '#FDCB6E', 'size_bytes': 10_000_000, 'order': 8,
     },
     {
         'slug': 'stories', 'title': 'Stories', 'module_type': 'stories',
         'description': 'Fun short stories with pictures and audio narration!',
-        'icon_emoji': '📖', 'color_hex': '#6C5CE7', 'size_bytes': 30_000_000, 'order': 8,
+        'icon_emoji': '📖', 'color_hex': '#6C5CE7', 'size_bytes': 30_000_000, 'order': 9,
     },
     {
         'slug': 'mathematics', 'title': 'Mathematics', 'module_type': 'mathematics',
         'description': 'Simple addition and subtraction made fun!',
-        'icon_emoji': '➕', 'color_hex': '#00B894', 'size_bytes': 14_000_000, 'order': 9,
+        'icon_emoji': '➕', 'color_hex': '#00B894', 'size_bytes': 14_000_000, 'order': 10,
     },
     {
         'slug': 'english', 'title': 'English', 'module_type': 'english',
         'description': 'Learn words, sentences and simple English!',
-        'icon_emoji': '🇬🇧', 'color_hex': '#0984E3', 'size_bytes': 20_000_000, 'order': 10,
+        'icon_emoji': '🇬🇧', 'color_hex': '#0984E3', 'size_bytes': 20_000_000, 'order': 11,
     },
 ]
 

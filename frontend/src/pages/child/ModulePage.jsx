@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useChild } from '../../hooks/useChild.jsx'
 import { contentService, lessonService, progressService, badgeService } from '../../services/data.service.js'
 import api from '../../api/client.js'
+import GeneralAwarenessModule from './GeneralAwarenessModule.jsx'
 
 export default function ModulePage() {
   const { slug } = useParams()
@@ -13,6 +14,10 @@ export default function ModulePage() {
   const [completedIds, setCompletedIds] = useState(new Set())
   const [loading, setLoading] = useState(true)
   const [activeLessonIdx, setActiveLessonIdx] = useState(null)
+
+  if (slug === 'general-awareness') {
+    return <GeneralAwarenessModule />
+  }
 
   useEffect(() => {
     const load = async () => {

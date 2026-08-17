@@ -181,7 +181,42 @@ export const badgeService = {
 }
 
 // ─── Content sync from API ─────────────────────────────────────────────────
+export const DEFAULT_MODULES = [
+  { id: 'm_alphabet', slug: 'alphabet', title: 'Alphabet', description: 'Learn ABCs from A to Z!', module_type: 'alphabet', icon_emoji: '🔤', color_hex: '#FF6B6B', order: 1 },
+  { id: 'm_numbers', slug: 'numbers', title: 'Numbers', description: 'Count 1 to 20 with bubbles!', module_type: 'numbers', icon_emoji: '🔢', color_hex: '#4ECDC4', order: 2 },
+  { id: 'm_colors', slug: 'colors', title: 'Colors', description: 'Discover colors of rainbow!', module_type: 'colors', icon_emoji: '🎨', color_hex: '#FFE66D', order: 3 },
+  { id: 'm_shapes', slug: 'shapes', title: 'Shapes', description: 'Circle, square, triangle & more!', module_type: 'shapes', icon_emoji: '⭐', color_hex: '#A29BFE', order: 4 },
+  { id: 'm_general_awareness', slug: 'general-awareness', title: 'General Awareness', description: 'Animals, Birds, Plants, Food, Vehicles, Weather, Seasons & Community Helpers!', module_type: 'general_awareness', icon_emoji: '🌎', color_hex: '#00CEC9', order: 5 },
+  { id: 'm_animals', slug: 'animals', title: 'Animals', description: 'Meet animals and hear sounds!', module_type: 'animals', icon_emoji: '🐾', color_hex: '#55EFC4', order: 6 },
+  { id: 'm_fruits', slug: 'fruits', title: 'Fruits & Veggies', description: 'Yummy fruits and vegetables!', module_type: 'fruits', icon_emoji: '🍎', color_hex: '#FD79A8', order: 7 },
+  { id: 'm_words', slug: 'words', title: 'Basic Words', description: 'Learn everyday words!', module_type: 'words', icon_emoji: '💬', color_hex: '#FDCB6E', order: 8 },
+  { id: 'm_stories', slug: 'stories', title: 'Stories', description: 'Short stories with pictures!', module_type: 'stories', icon_emoji: '📖', color_hex: '#6C5CE7', order: 9 },
+  { id: 'm_mathematics', slug: 'mathematics', title: 'Mathematics', description: 'Simple math made fun!', module_type: 'mathematics', icon_emoji: '➕', color_hex: '#00B894', order: 10 },
+  { id: 'm_english', slug: 'english', title: 'English', description: 'Simple English sentences!', module_type: 'english', icon_emoji: '🇬🇧', color_hex: '#0984E3', order: 11 },
+]
+
 export const contentService = {
+  async seedDefaultModules() {
+    for (const m of DEFAULT_MODULES) {
+      await db.learningModules.put({
+        localId: m.id,
+        serverId: m.id,
+        slug: m.slug,
+        title: m.title,
+        description: m.description,
+        moduleType: m.module_type,
+        iconEmoji: m.icon_emoji,
+        colorHex: m.color_hex,
+        sizeBytes: 10_000_000,
+        version: 1,
+        order: m.order,
+        lessonCount: 12,
+        downloadStatus: 'downloaded',
+        updatedAt: new Date().toISOString(),
+      })
+    }
+  },
+
   async seedModulesFromApi(modules) {
     for (const m of modules) {
       await db.learningModules.put({
@@ -277,11 +312,21 @@ export const contentService = {
   },
 
   async getModules() {
-    return db.learningModules.orderBy('order').toArray()
+    let list = await db.learningModules.orderBy('order').toArray()
+    if (!list || list.length === 0) {
+      await this.seedDefaultModules()
+      list = await db.learningModules.orderBy('order').toArray()
+    }
+    return list
   },
 
   async getModule(slug) {
-    return db.learningModules.where('slug').equals(slug).first()
+    let mod = await db.learningModules.where('slug').equals(slug).first()
+    if (!mod) {
+      await this.seedDefaultModules()
+      mod = await db.learningModules.where('slug').equals(slug).first()
+    }
+    return mod
   },
 
   async getLessons(moduleId) {

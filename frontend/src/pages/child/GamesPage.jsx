@@ -11,6 +11,7 @@ import CountingGame from '../../games/CountingGame.jsx'
 import ShapeMatchDragGame from '../../games/ShapeMatchDragGame.jsx'
 import AlphabetPhonicsSuiteGame from '../../games/AlphabetPhonicsSuiteGame.jsx'
 import PuzzleProblemSolvingGame from '../../games/PuzzleProblemSolvingGame.jsx'
+import WhoAmIGame from '../../games/WhoAmIGame.jsx'
 
 export default function GamesPage() {
   const { activeChild } = useChild()
@@ -49,6 +50,7 @@ export default function GamesPage() {
 
   const CATEGORIES = [
     { id: 'all', label: '🌟 All Usable Games' },
+    { id: 'awareness', label: '🌎 General Awareness' },
     { id: 'puzzles', label: '🧩 Puzzles & Logic' },
     { id: 'letters', label: '🔤 Phonics & Letters' },
     { id: 'shapes', label: '⭐ Shapes & Matching' },
@@ -59,7 +61,7 @@ export default function GamesPage() {
     ? BUILTIN_GAMES
     : BUILTIN_GAMES.filter(g => g.category === activeCategory)
 
-  const featuredGame = BUILTIN_GAMES.find(g => g.id === 'puzzle_suite') || BUILTIN_GAMES[0]
+  const featuredGame = BUILTIN_GAMES.find(g => g.id === 'who_am_i') || BUILTIN_GAMES[0]
 
   return (
     <div style={{ padding: '16px 16px 32px' }}>
@@ -105,20 +107,20 @@ export default function GamesPage() {
         ))}
       </div>
 
-      {/* Featured Puzzle Module Hero */}
-      {(activeCategory === 'all' || activeCategory === 'puzzles') && featuredGame && (
+      {/* Featured Game Hero */}
+      {(activeCategory === 'all' || activeCategory === 'awareness') && featuredGame && (
         <div style={{ marginBottom: 28 }}>
           <div style={{
-            fontSize: 13, fontWeight: 800, color: '#8B5CF6',
+            fontSize: 13, fontWeight: 800, color: '#00CEC9',
             textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8
           }}>
-            ⭐ FEATURED PUZZLE MODULE
+            🌎 FEATURED GENERAL AWARENESS GAME
           </div>
           <div
             onClick={() => setActiveGame(featuredGame)}
             style={{
-              background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.12) 0%, rgba(236, 72, 153, 0.12) 100%)',
-              border: '2.5px solid #8B5CF6',
+              background: 'linear-gradient(135deg, rgba(0, 206, 201, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%)',
+              border: '2.5px solid #00CEC9',
               borderRadius: 'var(--radius-xl)',
               padding: '24px 20px',
               display: 'flex',
@@ -134,15 +136,15 @@ export default function GamesPage() {
               {featuredGame.emoji}
             </div>
             <div style={{ flex: 1, textAlign: 'left' }}>
-              <span className="badge badge-purple" style={{ marginBottom: 6 }}>7 PUZZLE MODES</span>
+              <span className="badge badge-success" style={{ marginBottom: 6, background: '#00CEC9', color: '#fff' }}>15 RIDDLES</span>
               <h3 className="heading display-text" style={{ fontSize: 24 }}>
                 {featuredGame.title}
               </h3>
               <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 4, fontWeight: 700 }}>
-                Jigsaw (4 to 12 pieces), Missing Piece, Shadow Match, Mazes & Size Sorting!
+                "I help put out fires. Who am I?" Guess Community Helpers, Animals, Vehicles & Nature!
               </p>
             </div>
-            <button className="btn btn-primary" style={{ padding: '10px 20px', minHeight: 'auto' }}>
+            <button className="btn btn-primary" style={{ padding: '10px 20px', minHeight: 'auto', background: '#00CEC9', borderColor: '#00CEC9' }}>
               Play ▶
             </button>
           </div>
@@ -209,6 +211,7 @@ export default function GamesPage() {
 
 function GameRouter({ game, childId, onComplete, onBack }) {
   const componentMap = {
+    who_am_i: WhoAmIGame,
     puzzle_suite: PuzzleProblemSolvingGame,
     shape_drag_match: ShapeMatchDragGame,
     alphabet_phonics: AlphabetPhonicsSuiteGame,
@@ -227,6 +230,7 @@ function GameRouter({ game, childId, onComplete, onBack }) {
 }
 
 export const BUILTIN_GAMES = [
+  { id: 'who_am_i', gameType: 'who_am_i', category: 'awareness', title: 'Who Am I? Riddles', emoji: '🕵️‍♂️', color: '#00CEC9', difficulty: '15 Riddles' },
   { id: 'puzzle_suite', gameType: 'puzzle_suite', category: 'puzzles', title: 'Puzzle & Problem Solving', emoji: '🧩', color: '#8B5CF6', difficulty: '7 Modes' },
   { id: 'shape_drag_match', gameType: 'shape_drag_match', category: 'shapes', title: 'Shape Drop Match', emoji: '⭐', color: '#F97316', difficulty: '10 Stages' },
   { id: 'alphabet_phonics', gameType: 'alphabet_phonics', category: 'letters', title: 'Alphabet & Phonics', emoji: '🔤', color: '#EC4899', difficulty: '5 Modes' },
